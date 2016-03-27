@@ -1,0 +1,85 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "9QKY4bQlbQ/VZZFP8/1WtH4b0mA=",
+			"path": "golang.org/x/net/context",
+			"revision": "1600a4cd699d70009ec28edfd69d3568f6bd757d",
+			"revisionTime": "2016-03-26T08:32:47+11:00"
+		},
+		{
+			"checksumSHA1": "EJMLw8rk55bsqmIpSMtVORJpSGo=",
+			"path": "golang.org/x/net/context/ctxhttp",
+			"revision": "1600a4cd699d70009ec28edfd69d3568f6bd757d",
+			"revisionTime": "2016-03-26T08:32:47+11:00"
+		},
+		{
+			"checksumSHA1": "mktBVED98G2vv+OKcSgtnFVZC1Y=",
+			"path": "golang.org/x/oauth2",
+			"revision": "33fa30fe45020622640e947917fd1fc4c81e3dce",
+			"revisionTime": "2016-03-25T10:08:19-07:00"
+		},
+		{
+			"checksumSHA1": "HSRFs3mt2eHJBaK+6HEEv66xKyA=",
+			"path": "golang.org/x/oauth2/google",
+			"revision": "33fa30fe45020622640e947917fd1fc4c81e3dce",
+			"revisionTime": "2016-03-25T10:08:19-07:00"
+		},
+		{
+			"checksumSHA1": "W/GiDqzsagBnR7/yEvxatMhUDBs=",
+			"path": "golang.org/x/oauth2/internal",
+			"revision": "33fa30fe45020622640e947917fd1fc4c81e3dce",
+			"revisionTime": "2016-03-25T10:08:19-07:00"
+		},
+		{
+			"checksumSHA1": "4GaanJZHtrkglrx6a585C3I07+s=",
+			"path": "golang.org/x/oauth2/jws",
+			"revision": "33fa30fe45020622640e947917fd1fc4c81e3dce",
+			"revisionTime": "2016-03-25T10:08:19-07:00"
+		},
+		{
+			"checksumSHA1": "xifBSq0Pn6pIoPA/o3tyzq8X4Ds=",
+			"path": "golang.org/x/oauth2/jwt",
+			"revision": "33fa30fe45020622640e947917fd1fc4c81e3dce",
+			"revisionTime": "2016-03-25T10:08:19-07:00"
+		},
+		{
+			"checksumSHA1": "0PgeEtxSD/Vg/53Vctpf0Lk9V/k=",
+			"path": "google.golang.org/api/gensupport",
+			"revision": "43c645d4bcf9251ced36c823a93b6d198764aae4",
+			"revisionTime": "2016-03-24T10:48:31-07:00"
+		},
+		{
+			"checksumSHA1": "pFjCJhiloUic+Lq5zG+tOI+l1jc=",
+			"path": "google.golang.org/api/googleapi",
+			"revision": "43c645d4bcf9251ced36c823a93b6d198764aae4",
+			"revisionTime": "2016-03-24T10:48:31-07:00"
+		},
+		{
+			"checksumSHA1": "ii4ET3JHk3vkMUEcg+9t/1RZSUU=",
+			"path": "google.golang.org/api/googleapi/internal/uritemplates",
+			"revision": "43c645d4bcf9251ced36c823a93b6d198764aae4",
+			"revisionTime": "2016-03-24T10:48:31-07:00"
+		},
+		{
+			"checksumSHA1": "EEBHlysvPapeVpdL09Q4mGSOh88=",
+			"path": "google.golang.org/api/storage/v1",
+			"revision": "43c645d4bcf9251ced36c823a93b6d198764aae4",
+			"revisionTime": "2016-03-24T10:48:31-07:00"
+		},
+		{
+			"checksumSHA1": "Wp8g9MHRmK8SwcyGVCoGtPx+5Lo=",
+			"path": "google.golang.org/cloud/compute/metadata",
+			"revision": "eb47ba841d53d93506cfbfbc03927daf9cc48f88",
+			"revisionTime": "2016-03-24T09:28:19-07:00"
+		},
+		{
+			"checksumSHA1": "U7dGDNwEHORvJFMoNSXErKE7ITg=",
+			"path": "google.golang.org/cloud/internal",
+			"revision": "eb47ba841d53d93506cfbfbc03927daf9cc48f88",
+			"revisionTime": "2016-03-24T09:28:19-07:00"
+		}
+	],
+	"rootPath": "github.com/jordanpotter/remote-backup"
+}
