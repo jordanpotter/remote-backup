@@ -1,7 +1,14 @@
 package main
 
-import "github.com/jordanpotter/remote-backup/backup/google"
+import (
+	"log"
+
+	"github.com/jordanpotter/remote-backup/backup/google"
+)
 
 func main() {
-	google.Backup(".", "backups")
+	err := google.Backup("vendor", "backups")
+	if err != nil {
+		log.Printf("Unexpected backup error: %v", err)
+	}
 }
