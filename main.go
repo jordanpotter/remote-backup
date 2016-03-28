@@ -1,14 +1,20 @@
 package main
 
 import (
+	"encoding/hex"
 	"log"
 
 	"github.com/jordanpotter/remote-backup/backup/google"
 )
 
 func main() {
-	err := google.Backup("vendor", "backups")
+	secretKey, err := hex.DecodeString("ABCDABCDABCDABCDABCDABCDABCDABCD")
 	if err != nil {
-		log.Printf("Unexpected backup error: %v", err)
+		log.Fatalf("Unexpected backup error: %v", err)
+	}
+
+	err = google.Backup("vendor", secretKey, "backups")
+	if err != nil {
+		log.Fatalf("Unexpected backup error: %v", err)
 	}
 }

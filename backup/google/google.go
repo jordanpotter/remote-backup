@@ -14,7 +14,7 @@ import (
 	"github.com/jordanpotter/remote-backup/internal/encrypt"
 )
 
-func Backup(path, bucket string) error {
+func Backup(path string, secretKey []byte, bucket string) error {
 	client, err := google.DefaultClient(oauth2.NoContext, storage.DevstorageFullControlScope)
 	if err != nil {
 		log.Fatalf("Unable to get default client: %v", err)
@@ -30,14 +30,14 @@ func Backup(path, bucket string) error {
 		return err
 	}
 
-	err = processFiles(path, f)
+	err = processFiles(path, secretKey, f)
 	if err != nil {
 		log.Fatalf("Unable to process files: %v", err)
 	}
 	return nil
 }
 
-func processFiles(path string, w io.WriteCloser) error {
+func processFiles(path string, secretKey []byte, w io.WriteCloser) error {
 	var wg sync.WaitGroup
 	errc := make(chan error)
 
@@ -58,7 +58,7 @@ func processFiles(path string, w io.WriteCloser) error {
 
 	wg.Add(1)
 	go func() {
-		errc <- encrypt.CTR("example key 1234", cr, w)
+		errc <- encrypt.CTR(secretKey, cr, w)
 		wg.Done()
 	}()
 
