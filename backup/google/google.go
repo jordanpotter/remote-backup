@@ -11,6 +11,7 @@ import (
 	storage "google.golang.org/api/storage/v1"
 
 	"github.com/jordanpotter/remote-backup/internal/compress"
+	"github.com/jordanpotter/remote-backup/internal/encrypt"
 )
 
 func Backup(path, bucket string) error {
@@ -40,7 +41,8 @@ func processFiles(path string, w io.WriteCloser) error {
 	var wg sync.WaitGroup
 	errc := make(chan error)
 
-	tr, tw := io.Pipe()
+	gr, tw := io.Pipe()
+	cr, gw := io.Pipe()
 
 	wg.Add(1)
 	go func() {
@@ -50,7 +52,13 @@ func processFiles(path string, w io.WriteCloser) error {
 
 	wg.Add(1)
 	go func() {
-		errc <- compress.Gzip(tr, w)
+		errc <- compress.Gzip(gr, gw)
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		errc <- encrypt.CTR("example key 1234", cr, w)
 		wg.Done()
 	}()
 

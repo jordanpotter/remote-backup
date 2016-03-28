@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-const compressionLevel = gzip.BestCompression
+const compressionLevel = gzip.DefaultCompression
 
 func Gzip(r io.ReadCloser, w io.WriteCloser) error {
 	defer r.Close()
