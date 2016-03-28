@@ -8,28 +8,20 @@ import (
 	"path/filepath"
 )
 
-func Tar(path string) (io.ReadCloser, <-chan error) {
-	errc := make(chan error, 1)
-	r, w := io.Pipe()
+func Tar(path string, w io.WriteCloser) error {
+	defer w.Close()
 
-	go func() {
-		defer w.Close()
-		defer close(errc)
+	tw := tar.NewWriter(w)
+	defer tw.Close()
 
-		tw := tar.NewWriter(w)
-		defer tw.Close()
-
-		info, err := os.Stat(path)
-		if err != nil {
-			errc <- err
-		} else if !info.IsDir() {
-			errc <- fmt.Errorf("%s is not a directory path", path)
-		} else {
-			errc <- filepath.Walk(path, getFileTarHandler(path, tw))
-		}
-	}()
-
-	return r, errc
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	} else if !info.IsDir() {
+		return fmt.Errorf("%s is not a directory path", path)
+	} else {
+		return filepath.Walk(path, getFileTarHandler(path, tw))
+	}
 }
 
 func getFileTarHandler(rootPath string, tw *tar.Writer) filepath.WalkFunc {

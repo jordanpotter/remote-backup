@@ -7,25 +7,16 @@ import (
 
 const compressionLevel = gzip.BestCompression
 
-func Gzip(src io.ReadCloser) (io.ReadCloser, <-chan error) {
-	errc := make(chan error, 2)
-	r, w := io.Pipe()
+func Gzip(r io.ReadCloser, w io.WriteCloser) error {
+	defer r.Close()
+	defer w.Close()
 
-	go func() {
-		defer src.Close()
-		defer w.Close()
-		defer close(errc)
+	gw, err := gzip.NewWriterLevel(w, compressionLevel)
+	if err != nil {
+		return err
+	}
+	defer gw.Close()
 
-		gw, err := gzip.NewWriterLevel(w, compressionLevel)
-		if err != nil {
-			errc <- err
-			return
-		}
-		defer gw.Close()
-
-		_, err = io.Copy(gw, src)
-		errc <- err
-	}()
-
-	return r, errc
+	_, err = io.Copy(gw, r)
+	return err
 }

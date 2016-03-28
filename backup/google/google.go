@@ -1,7 +1,6 @@
 package google
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -25,49 +24,33 @@ func Backup(path, bucket string) error {
 		log.Fatalf("Unable to create storage service: %v", err)
 	}
 
-	r, errc := readFiles(path)
-	defer r.Close()
-	buf, err := ioutil.ReadAll(r)
+	f, err := ioutil.TempFile("", "test")
 	if err != nil {
 		return err
 	}
-	fmt.Println(len(buf))
 
-	for err := range errc {
-		if err != nil {
-			return err
-		}
+	err = processFiles(path, f)
+	if err != nil {
+		log.Fatalf("Unable to process files: %v", err)
 	}
 	return nil
 }
 
-func readFiles(path string) (io.ReadCloser, <-chan error) {
+func processFiles(path string, w io.WriteCloser) error {
 	var wg sync.WaitGroup
-	errc := make(chan error, 2)
+	errc := make(chan error)
+
+	tr, tw := io.Pipe()
 
 	wg.Add(1)
-	tr, terrc := compress.Tar(path)
-
-	wg.Add(1)
-	gr, gerrc := compress.Gzip(tr)
-
 	go func() {
-		for err := range terrc {
-			if err != nil {
-				log.Printf("Unable to tar directory: %v", err)
-				errc <- err
-			}
-		}
+		errc <- compress.Tar(path, tw)
 		wg.Done()
 	}()
 
+	wg.Add(1)
 	go func() {
-		for err := range gerrc {
-			if err != nil {
-				log.Printf("Unable to gzip directory: %v", err)
-				errc <- err
-			}
-		}
+		errc <- compress.Gzip(tr, w)
 		wg.Done()
 	}()
 
@@ -76,5 +59,10 @@ func readFiles(path string) (io.ReadCloser, <-chan error) {
 		close(errc)
 	}()
 
-	return gr, errc
+	for err := range errc {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
