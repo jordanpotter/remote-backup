@@ -20,11 +20,11 @@ func Tar(path string, w io.WriteCloser) error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("%s is not a directory path", path)
 	} else {
-		return filepath.Walk(path, getFileTarHandler(path, tw))
+		return filepath.Walk(path, fileTarHandler(path, tw))
 	}
 }
 
-func getFileTarHandler(rootPath string, tw *tar.Writer) filepath.WalkFunc {
+func fileTarHandler(rootPath string, tw *tar.Writer) filepath.WalkFunc {
 	return func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

@@ -2,63 +2,42 @@ package google
 
 import (
 	"io"
-	"io/ioutil"
-	"log"
 	"sync"
-
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	storage "google.golang.org/api/storage/v1"
+	"time"
 
 	"github.com/jordanpotter/remote-backup/internal/compress"
 	"github.com/jordanpotter/remote-backup/internal/encrypt"
 )
 
-func Backup(path string, secretKey []byte, bucket string) error {
-	client, err := google.DefaultClient(oauth2.NoContext, storage.DevstorageFullControlScope)
-	if err != nil {
-		log.Fatalf("Unable to get default client: %v", err)
-	}
-
-	_, err = storage.New(client)
-	if err != nil {
-		log.Fatalf("Unable to create storage service: %v", err)
-	}
-
-	f, err := ioutil.TempFile("", "test")
-	if err != nil {
-		return err
-	}
-
-	err = processFiles(path, secretKey, f)
-	if err != nil {
-		log.Fatalf("Unable to process files: %v", err)
-	}
-	return nil
-}
-
-func processFiles(path string, secretKey []byte, w io.WriteCloser) error {
+func Backup(projectID, bucketName, path string, secretKey []byte) error {
 	var wg sync.WaitGroup
 	errc := make(chan error)
 
-	gr, tw := io.Pipe()
-	cr, gw := io.Pipe()
+	gzipReader, tarWriter := io.Pipe()
+	ctrReader, gzipWriter := io.Pipe()
+	googleReader, ctrWriter := io.Pipe()
 
 	wg.Add(1)
 	go func() {
-		errc <- compress.Tar(path, tw)
+		errc <- compress.Tar(path, tarWriter)
 		wg.Done()
 	}()
 
 	wg.Add(1)
 	go func() {
-		errc <- compress.Gzip(gr, gw)
+		errc <- compress.Gzip(gzipReader, gzipWriter)
 		wg.Done()
 	}()
 
 	wg.Add(1)
 	go func() {
-		errc <- encrypt.CTR(secretKey, cr, w)
+		errc <- encrypt.CTR(secretKey, ctrReader, ctrWriter)
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		errc <- uploadToBucket(projectID, bucketName, getFilename(), googleReader)
 		wg.Done()
 	}()
 
@@ -73,4 +52,8 @@ func processFiles(path string, secretKey []byte, w io.WriteCloser) error {
 		}
 	}
 	return nil
+}
+
+func getFilename() string {
+	return time.Now().UTC().Format(time.RFC3339)
 }
