@@ -1,0 +1,8 @@
+package: github.com/jordanpotter/remote-backup
+import:
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+- package: google.golang.org/api
+  subpackages:
+  - storage/v1
