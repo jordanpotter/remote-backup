@@ -4,14 +4,16 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"io"
 )
 
-func CTR(key []byte, r io.ReadCloser, w io.WriteCloser) error {
+func CTR(secret string, r io.ReadCloser, w io.WriteCloser) error {
 	defer r.Close()
 	defer w.Close()
 
-	block, err := aes.NewCipher(key)
+	hashedSecret := sha256.Sum256([]byte(secret))
+	block, err := aes.NewCipher(hashedSecret[:])
 	if err != nil {
 		return err
 	}

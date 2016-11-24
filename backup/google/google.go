@@ -9,7 +9,7 @@ import (
 	"github.com/jordanpotter/remote-backup/internal/encrypt"
 )
 
-func Backup(projectID, bucketName, path string, secretKey []byte) error {
+func Backup(projectID, bucket, path, secret string) error {
 	var wg sync.WaitGroup
 	errc := make(chan error)
 
@@ -31,13 +31,13 @@ func Backup(projectID, bucketName, path string, secretKey []byte) error {
 
 	wg.Add(1)
 	go func() {
-		errc <- encrypt.CTR(secretKey, ctrReader, ctrWriter)
+		errc <- encrypt.CTR(secret, ctrReader, ctrWriter)
 		wg.Done()
 	}()
 
 	wg.Add(1)
 	go func() {
-		errc <- uploadToBucket(projectID, bucketName, getFilename(), googleReader)
+		errc <- uploadToBucket(projectID, bucket, getFilename(), googleReader)
 		wg.Done()
 	}()
 
