@@ -1,8 +1,18 @@
 package: github.com/jordanpotter/remote-backup
 import:
+- package: github.com/pkg/errors
+  version: ^0.8.0
+- package: golang.org/x/sync
+  subpackages:
+  - errgroup
 - package: golang.org/x/oauth2
   subpackages:
   - google
 - package: google.golang.org/api
   subpackages:
   - storage/v1
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert
+  - require
