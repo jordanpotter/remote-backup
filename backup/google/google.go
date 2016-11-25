@@ -1,59 +1,45 @@
 package google
 
 import (
+	"context"
 	"io"
-	"sync"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/jordanpotter/remote-backup/internal/compress"
-	"github.com/jordanpotter/remote-backup/internal/encrypt"
+	"github.com/jordanpotter/remote-backup/internal/crypto"
+	"github.com/pkg/errors"
 )
 
 func Backup(projectID, bucket, path, secret string) error {
-	var wg sync.WaitGroup
-	errc := make(chan error)
-
 	gzipReader, tarWriter := io.Pipe()
 	ctrReader, gzipWriter := io.Pipe()
 	googleReader, ctrWriter := io.Pipe()
 
-	wg.Add(1)
-	go func() {
-		errc <- compress.Tar(path, tarWriter)
-		wg.Done()
-	}()
+	group, context := errgroup.WithContext(context.Background())
 
-	wg.Add(1)
-	go func() {
-		errc <- compress.Gzip(gzipReader, gzipWriter)
-		wg.Done()
-	}()
+	group.Go(func() error {
+		err := compress.Tar(path, tarWriter)
+		return errors.Wrapf(err, "failed to tar %q", path)
+	})
 
-	wg.Add(1)
-	go func() {
-		errc <- encrypt.CTR(secret, ctrReader, ctrWriter)
-		wg.Done()
-	}()
+	group.Go(func() error {
+		err := compress.Gzip(gzipReader, gzipWriter)
+		return errors.Wrap(err, "failed to gzip")
+	})
 
-	wg.Add(1)
-	go func() {
-		errc <- uploadToBucket(projectID, bucket, getFilename(), googleReader)
-		wg.Done()
-	}()
+	group.Go(func() error {
+		err := crypto.CTREncrypt(secret, ctrReader, ctrWriter)
+		return errors.Wrap(err, "failed to encrypt")
+	})
 
-	go func() {
-		wg.Wait()
-		close(errc)
-	}()
+	group.Go(func() error {
+		now := time.Now().UTC().Format(time.RFC3339)
+		err := uploadToBucket(context, projectID, bucket, now, googleReader)
+		return errors.Wrapf(err, "failed to updated to bucket %q", bucket)
+	})
 
-	for err := range errc {
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func getFilename() string {
-	return time.Now().UTC().Format(time.RFC3339)
+	err := group.Wait()
+	return errors.Wrap(err, "unable to create backup")
 }
