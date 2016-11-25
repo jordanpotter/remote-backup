@@ -6,14 +6,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jordanpotter/remote-backup/utils"
 	"github.com/pkg/errors"
 )
 
+// Tar will write a tarball to w of the directory specified by rootPath.
 func Tar(rootPath string, w io.WriteCloser) error {
-	defer w.Close()
+	defer utils.MustClose(w)
 
 	tw := tar.NewWriter(w)
-	defer tw.Close()
+	defer utils.MustClose(tw)
 
 	info, err := os.Stat(rootPath)
 	if err != nil {
@@ -55,15 +57,16 @@ func tarFileHandler(rootPath string, tw *tar.Writer) filepath.WalkFunc {
 		if err != nil {
 			return errors.Wrapf(err, "failed to open file %q", path)
 		}
-		defer file.Close()
+		defer utils.MustClose(file)
 
 		_, err = io.Copy(tw, file)
 		return errors.Wrap(err, "failed to send file data to tar writer")
 	}
 }
 
+// Untar will extract the given tarball data in r to the directory specified by rootPath.
 func Untar(rootPath string, r io.ReadCloser) error {
-	defer r.Close()
+	defer utils.MustClose(r)
 
 	tr := tar.NewReader(r)
 	for {
@@ -87,7 +90,7 @@ func Untar(rootPath string, r io.ReadCloser) error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to open file %q", path)
 		}
-		defer file.Close()
+		defer utils.MustClose(file)
 
 		if _, err = io.Copy(file, tr); err != nil {
 			return errors.Wrapf(err, "failed to write to file %q", path)

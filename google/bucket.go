@@ -5,6 +5,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/jordanpotter/remote-backup/utils"
 	"github.com/pkg/errors"
 
 	"golang.org/x/oauth2/google"
@@ -12,7 +13,7 @@ import (
 )
 
 func uploadToBucket(context context.Context, projectID, bucket, filename string, r io.ReadCloser) error {
-	defer r.Close()
+	defer utils.MustClose(r)
 
 	c, err := google.DefaultClient(context, storage.DevstorageFullControlScope)
 	if err != nil {
@@ -35,7 +36,7 @@ func uploadToBucket(context context.Context, projectID, bucket, filename string,
 }
 
 func downloadFromBucket(context context.Context, projectID, bucket string, w io.WriteCloser) error {
-	defer w.Close()
+	defer utils.MustClose(w)
 
 	c, err := google.DefaultClient(context, storage.DevstorageFullControlScope)
 	if err != nil {
@@ -56,7 +57,7 @@ func downloadFromBucket(context context.Context, projectID, bucket string, w io.
 	if err != nil {
 		return errors.Wrapf(err, "failed to retrieve file %q from bucket %q", filename, bucket)
 	}
-	defer resp.Body.Close()
+	defer utils.MustClose(resp.Body)
 
 	_, err = io.Copy(w, resp.Body)
 	return errors.Wrap(err, "failed to read response data")
@@ -102,7 +103,7 @@ func mostRecentFilename(service *storage.Service, projectID, bucket string) (str
 func allObjectsInBucket(service *storage.Service, projectID, bucket string) ([]*storage.Object, error) {
 	var objects []*storage.Object
 
-	pageToken := ""
+	var pageToken string
 	for {
 		call := service.Objects.List(bucket)
 		if pageToken != "" {
@@ -114,9 +115,7 @@ func allObjectsInBucket(service *storage.Service, projectID, bucket string) ([]*
 			return nil, errors.Wrap(err, "failed to retrieve files")
 		}
 
-		for _, object := range resp.Items {
-			objects = append(objects, object)
-		}
+		objects = append(objects, resp.Items...)
 
 		pageToken = resp.NextPageToken
 		if pageToken == "" {

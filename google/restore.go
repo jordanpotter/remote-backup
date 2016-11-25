@@ -4,12 +4,14 @@ import (
 	"context"
 	"io"
 
-	"github.com/jordanpotter/remote-backup/internal/compress"
-	"github.com/jordanpotter/remote-backup/internal/crypto"
+	"github.com/jordanpotter/remote-backup/compress"
+	"github.com/jordanpotter/remote-backup/crypto"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
 
+// Restore will decrypt and decompress the most recent backup from the bucket
+// specified and save it to the given path.
 func Restore(projectID, bucket, path, secret string) error {
 	ctrReader, googleWriter := io.Pipe()
 	gzipReader, ctrWriter := io.Pipe()

@@ -1,0 +1,12 @@
+---
+language: go
+go:
+  - 1.7.3
+install:
+  - go get -u github.com/Masterminds/glide
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install
+script:
+  - make install
+  - make lint
+  - make test

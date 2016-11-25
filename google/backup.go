@@ -7,11 +7,13 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/jordanpotter/remote-backup/internal/compress"
-	"github.com/jordanpotter/remote-backup/internal/crypto"
+	"github.com/jordanpotter/remote-backup/compress"
+	"github.com/jordanpotter/remote-backup/crypto"
 	"github.com/pkg/errors"
 )
 
+// Backup will create a compressed and encrypted backup of the specified
+// directory and store it in the given bucket.
 func Backup(projectID, bucket, path, secret string) error {
 	gzipReader, tarWriter := io.Pipe()
 	ctrReader, gzipWriter := io.Pipe()

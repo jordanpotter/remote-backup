@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jordanpotter/remote-backup/internal/testutils"
+	"github.com/jordanpotter/remote-backup/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,14 +35,14 @@ func TestTar(t *testing.T) {
 	err = createTestFiles(originalPath, testFiles)
 	require.NoError(t, err)
 
-	var tarred testutils.Buffer
-	err = Tar(originalPath, &tarred)
+	var tarred bytes.Buffer
+	err = Tar(originalPath, utils.NopWriteCloser(&tarred))
 	require.NoError(t, err)
 
 	untarPath, err := ioutil.TempDir("", testTarDirPrefix)
 	require.NoError(t, err)
 
-	err = Untar(untarPath, &tarred)
+	err = Untar(untarPath, ioutil.NopCloser(&tarred))
 	require.NoError(t, err)
 
 	err = verifyTestFilesMatch(originalPath, untarPath, testFiles)
