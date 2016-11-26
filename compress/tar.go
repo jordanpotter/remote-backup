@@ -3,6 +3,7 @@ package compress
 import (
 	"archive/tar"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -34,19 +35,25 @@ func tarFileHandler(rootPath string, tw *tar.Writer) filepath.WalkFunc {
 			return err
 		}
 
+		isSymlink := info.Mode()&os.ModeSymlink != 0
+		if isSymlink {
+			log.Printf("Ignoring symlink %q", path)
+			return nil
+		}
+
 		header, err := tar.FileInfoHeader(info, info.Name())
 		if err != nil {
-			return errors.Wrap(err, "failed to create file info header")
+			return errors.Wrapf(err, "failed to create info header for file %q", path)
 		}
 
 		header.Name, err = filepath.Rel(rootPath, path)
 		if err != nil {
-			return errors.Wrap(err, "failed to get relative path of file")
+			return errors.Wrapf(err, "failed to determine relative path for file %q", path)
 		}
 
 		err = tw.WriteHeader(header)
 		if err != nil {
-			return errors.Wrap(err, "failed to write file header")
+			return errors.Wrapf(err, "failed to write header for file %q", path)
 		}
 
 		if info.IsDir() {
@@ -60,7 +67,7 @@ func tarFileHandler(rootPath string, tw *tar.Writer) filepath.WalkFunc {
 		defer utils.MustClose(file)
 
 		_, err = io.Copy(tw, file)
-		return errors.Wrap(err, "failed to send file data to tar writer")
+		return errors.Wrapf(err, "failed to send file %q to tar writer", path)
 	}
 }
 
@@ -79,22 +86,26 @@ func Untar(rootPath string, r io.ReadCloser) error {
 
 		path := filepath.Join(rootPath, header.Name)
 		info := header.FileInfo()
-		if info.IsDir() {
-			if err = os.MkdirAll(path, info.Mode()); err != nil {
-				return errors.Wrapf(err, "failed to create directory %q", path)
-			}
-			continue
-		}
-
-		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
+		err = untarFileHandler(path, info, tr)
 		if err != nil {
-			return errors.Wrapf(err, "failed to open file %q", path)
-		}
-		defer utils.MustClose(file)
-
-		if _, err = io.Copy(file, tr); err != nil {
-			return errors.Wrapf(err, "failed to write to file %q", path)
+			return errors.Wrapf(err, "failed to handle file %q", path)
 		}
 	}
 	return nil
+}
+
+func untarFileHandler(path string, info os.FileInfo, tr io.Reader) error {
+	if info.IsDir() {
+		err := os.MkdirAll(path, info.Mode())
+		return errors.Wrapf(err, "failed to create directory %q", path)
+	}
+
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
+	if err != nil {
+		return errors.Wrapf(err, "failed to open file %q", path)
+	}
+	defer utils.MustClose(file)
+
+	_, err = io.Copy(file, tr)
+	return errors.Wrapf(err, "failed to write to file %q", path)
 }
